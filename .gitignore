@@ -1,0 +1,24 @@
+# Backend
+backend/.env
+backend/vendor/
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+
+# Backoffice
+backoffice/node_modules/
+backoffice/dist/
+
+# B2C
+b2c/node_modules/
+b2c/.next/
+
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+
+# Général
+.DS_Store
+*.log
+*.sqlite

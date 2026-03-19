@@ -1,0 +1,171 @@
+stages:
+  - test
+  - build
+  - dockerize
+
+variables:
+  MYSQL_DATABASE: masbanti_test
+  MYSQL_ROOT_PASSWORD: root
+  MYSQL_USER: masbanti
+  MYSQL_PASSWORD: masbanti
+
+# ==========================================
+# STAGE 1 : TESTS
+# ==========================================
+
+test:backend:
+  stage: test
+  image: php:8.2-cli
+  services:
+    - mysql:8.0
+  variables:
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_DATABASE: masbanti_test
+    DB_USERNAME: masbanti
+    DB_PASSWORD: masbanti
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libpng-dev libonig-dev
+    - docker-php-ext-install pdo_mysql mbstring zip
+    - curl -sS https://getcomposer.org/installer | php
+    - mv composer.phar /usr/local/bin/composer
+    - cd backend
+    - composer install --no-interaction --prefer-dist
+    - cp .env.example .env
+    - php artisan key:generate
+    - php artisan migrate --force
+  script:
+    - php artisan test
+  only:
+    - main
+    - develop
+    - merge_requests
+
+test:backoffice:
+  stage: test
+  image: node:20
+  before_script:
+    - cd backoffice
+    - npm install
+  script:
+    - npm run build
+  only:
+    - main
+    - develop
+    - merge_requests
+
+test:b2c:
+  stage: test
+  image: node:20
+  before_script:
+    - cd b2c
+    - npm install
+  script:
+    - npm run build
+  only:
+    - main
+    - develop
+    - merge_requests
+
+# ==========================================
+# STAGE 2 : BUILD
+# ==========================================
+
+build:backend:
+  stage: build
+  image: php:8.2-cli
+  before_script:
+    - apt-get update && apt-get install -y git unzip libzip-dev libpng-dev libonig-dev
+    - docker-php-ext-install pdo_mysql mbstring zip
+    - curl -sS https://getcomposer.org/installer | php
+    - mv composer.phar /usr/local/bin/composer
+    - cd backend
+    - composer install --no-dev --optimize-autoloader
+  script:
+    - echo "Backend build OK"
+  artifacts:
+    paths:
+      - backend/vendor/
+    expire_in: 1 hour
+  only:
+    - main
+
+build:backoffice:
+  stage: build
+  image: node:20
+  before_script:
+    - cd backoffice
+    - npm install
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - backoffice/dist/
+    expire_in: 1 hour
+  only:
+    - main
+
+build:b2c:
+  stage: build
+  image: node:20
+  before_script:
+    - cd b2c
+    - npm install
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - b2c/.next/
+    expire_in: 1 hour
+  only:
+    - main
+
+# ==========================================
+# STAGE 3 : DOCKERIZATION
+# ==========================================
+
+dockerize:backend:
+  stage: dockerize
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA ./backend
+    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/backend:latest
+    - docker push $CI_REGISTRY_IMAGE/backend:latest
+  only:
+    - main
+
+dockerize:backoffice:
+  stage: dockerize
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/backoffice:$CI_COMMIT_SHORT_SHA ./backoffice
+    - docker push $CI_REGISTRY_IMAGE/backoffice:$CI_COMMIT_SHORT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/backoffice:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/backoffice:latest
+    - docker push $CI_REGISTRY_IMAGE/backoffice:latest
+  only:
+    - main
+
+dockerize:b2c:
+  stage: dockerize
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/b2c:$CI_COMMIT_SHORT_SHA ./b2c
+    - docker push $CI_REGISTRY_IMAGE/b2c:$CI_COMMIT_SHORT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/b2c:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/b2c:latest
+    - docker push $CI_REGISTRY_IMAGE/b2c:latest
+  only:
+    - main

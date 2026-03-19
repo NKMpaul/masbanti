@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Commande;
+use Illuminate\Http\Request;
+
+class CommandeController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Commande::with(['client', 'agence', 'articles']);
+
+        if ($request->has('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->has('agence_id')) {
+            $query->where('agence_id', $request->agence_id);
+        }
+
+        if ($request->has('client_id')) {
+            $query->where('client_id', $request->client_id);
+        }
+
+        return response()->json($query->orderBy('created_at', 'desc')->paginate(10));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'client_id'          => 'required|exists:clients,id',
+            'agence_id'          => 'required|exists:agences,id',
+            'date_depot'         => 'required|date',
+            'date_retrait_prevue'=> 'nullable|date',
+            'mode_livraison'     => 'required|in:EN_AGENCE,LIVRAISON_DOMICILE',
+            'adresse_livraison'  => 'nullable|string',
+            'commentaire'        => 'nullable|string',
+            'articles'           => 'required|array|min:1',
+            'articles.*.type_article_id' => 'required|exists:type_articles,id',
+            'articles.*.quantite'        => 'required|integer|min:1',
+            'articles.*.prix_unitaire'   => 'required|numeric|min:0',
+            'articles.*.etat'            => 'nullable|in:NORMAL,TACHE,DECOLORE,ABIME',
+        ]);
+
+        $commande = Commande::create($request->except('articles'));
+
+        $montantTotal = 0;
+        foreach ($request->articles as $article) {
+            $commande->articles()->create($article);
+            $montantTotal += $article['prix_unitaire'] * $article['quantite'];
+        }
+
+        $commande->update(['montant_total' => $montantTotal]);
+
+        return response()->json($commande->load(['client', 'agence', 'articles']), 201);
+    }
+
+    public function show(string $id)
+    {
+        $commande = Commande::with(['client', 'agence', 'articles.typeArticle'])->findOrFail($id);
+        return response()->json($commande);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $commande = Commande::findOrFail($id);
+
+        $request->validate([
+            'statut'          => 'sometimes|in:CREEE,EN_ATTENTE,COLLECTEE,RECUE_AGENCE,EN_TRAITEMENT,PRETE,EN_LIVRAISON,LIVREE,RETIREE_AGENCE,ANNULEE',
+            'commentaire'     => 'sometimes|string',
+            'montant_paye'    => 'sometimes|numeric|min:0',
+            'adresse_livraison' => 'sometimes|string',
+        ]);
+
+        $commande->update($request->all());
+
+        return response()->json($commande->load(['client', 'agence', 'articles']));
+    }
+
+    public function destroy(string $id)
+    {
+        $commande = Commande::findOrFail($id);
+        $commande->delete();
+
+        return response()->json(['message' => 'Commande supprimée avec succès.']);
+    }
+
+    public function changerStatut(Request $request, string $id)
+{
+    $commande = Commande::with(['client.user'])->findOrFail($id);
+
+    $request->validate([
+        'statut' => 'required|in:CREEE,EN_ATTENTE,COLLECTEE,RECUE_AGENCE,EN_TRAITEMENT,PRETE,EN_LIVRAISON,LIVREE,RETIREE_AGENCE,ANNULEE',
+    ]);
+
+    $commande->update(['statut' => $request->statut]);
+
+    // Envoyer notification automatique
+    $notificationService = new \App\Services\NotificationService();
+    $notificationService->notifierChangementStatut($request->statut, $commande);
+
+    return response()->json($commande);
+}
+}

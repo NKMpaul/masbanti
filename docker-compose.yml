@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: masbanti_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: masbanti
+      MYSQL_USER: masbanti
+      MYSQL_PASSWORD: masbanti
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - masbanti_network
+
+  # Backend Laravel
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: masbanti_backend
+    environment:
+      APP_ENV: production
+      APP_KEY: base64:votre_cle_ici
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: masbanti
+      DB_USERNAME: masbanti
+      DB_PASSWORD: masbanti
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    networks:
+      - masbanti_network
+
+  # Backoffice React
+  backoffice:
+    build:
+      context: ./backoffice
+      dockerfile: Dockerfile
+    container_name: masbanti_backoffice
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - masbanti_network
+
+  # Site B2C Next.js
+  b2c:
+    build:
+      context: ./b2c
+      dockerfile: Dockerfile
+    container_name: masbanti_b2c
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - masbanti_network
+
+volumes:
+  mysql_data:
+
+networks:
+  masbanti_network:
+    driver: bridge
