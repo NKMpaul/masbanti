@@ -9,23 +9,30 @@ use Illuminate\Http\Request;
 class CommandeController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Commande::with(['client', 'agence', 'articles']);
+{
+    $query = Commande::with(['client', 'agence', 'articles']);
 
-        if ($request->has('statut')) {
-            $query->where('statut', $request->statut);
+    // Si c'est un client, il ne voit que ses commandes
+    if ($request->user()->hasRole('CLIENT')) {
+        $client = \App\Models\Client::where('user_id', $request->user()->id)->first();
+        if ($client) {
+            $query->where('client_id', $client->id);
+        } else {
+            // Nouveau client sans commandes
+            return response()->json(['data' => [], 'total' => 0]);
         }
-
-        if ($request->has('agence_id')) {
-            $query->where('agence_id', $request->agence_id);
-        }
-
-        if ($request->has('client_id')) {
-            $query->where('client_id', $request->client_id);
-        }
-
-        return response()->json($query->orderBy('created_at', 'desc')->paginate(10));
     }
+
+    if ($request->has('statut')) {
+        $query->where('statut', $request->statut);
+    }
+
+    if ($request->has('agence_id')) {
+        $query->where('agence_id', $request->agence_id);
+    }
+
+    return response()->json($query->orderBy('created_at', 'desc')->paginate(10));
+}
 
     public function store(Request $request)
     {
