@@ -99,4 +99,4 @@ npx expo start --web
 - ✅ Tests Unitaires
 - ✅ CI/CD GitLab
 
-## Année universitaire 2025-2026
+## Année universitaire 2025-2026zC
