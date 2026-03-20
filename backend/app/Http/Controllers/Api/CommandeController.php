@@ -95,18 +95,32 @@ class CommandeController extends Controller
     }
 
     public function changerStatut(Request $request, string $id)
+    {
+        $commande = Commande::with(['client.user'])->findOrFail($id);
+
+        $request->validate([
+            'statut' => 'required|in:CREEE,EN_ATTENTE,COLLECTEE,RECUE_AGENCE,EN_TRAITEMENT,PRETE,EN_LIVRAISON,LIVREE,RETIREE_AGENCE,ANNULEE',
+        ]);
+
+        $commande->update(['statut' => $request->statut]);
+
+        // Envoyer notification automatique
+        $notificationService = new \App\Services\NotificationService();
+        $notificationService->notifierChangementStatut($request->statut, $commande);
+
+        return response()->json($commande);
+    }
+
+
+    public function suivi(string $numero)
 {
-    $commande = Commande::with(['client.user'])->findOrFail($id);
+    $commande = Commande::with(['agence', 'articles.typeArticle'])
+        ->where('numero_commande', $numero)
+        ->first();
 
-    $request->validate([
-        'statut' => 'required|in:CREEE,EN_ATTENTE,COLLECTEE,RECUE_AGENCE,EN_TRAITEMENT,PRETE,EN_LIVRAISON,LIVREE,RETIREE_AGENCE,ANNULEE',
-    ]);
-
-    $commande->update(['statut' => $request->statut]);
-
-    // Envoyer notification automatique
-    $notificationService = new \App\Services\NotificationService();
-    $notificationService->notifierChangementStatut($request->statut, $commande);
+    if (!$commande) {
+        return response()->json(['message' => 'Commande introuvable.'], 404);
+    }
 
     return response()->json($commande);
 }

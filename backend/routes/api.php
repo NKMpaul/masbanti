@@ -28,7 +28,8 @@ Route::get('agences/{agence}', [AgenceController::class, 'show']);
 Route::get('type-articles', [TypeArticleController::class, 'index']);
 Route::get('type-services', [TypeServiceController::class, 'index']);
 Route::post('clients', [ClientController::class, 'store']); // inscription client
-
+// Suivi commande public
+Route::get('commandes/suivi/{numero}', [CommandeController::class, 'suivi']);
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
