@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext'
 import { BellOutlined } from '@ant-design/icons'
 import { AppstoreOutlined } from '@ant-design/icons'
 import { BarChartOutlined } from '@ant-design/icons'
+import { AuditOutlined } from '@ant-design/icons'
 
 const { Sider, Header, Content } = Layout
 
@@ -34,6 +35,7 @@ export default function MainLayout() {
     { key: '/catalogue', icon: <AppstoreOutlined />, label: 'Catalogue' },
     { key: '/factures',     icon: <FileTextOutlined />,      label: 'Factures' },
     { key: '/rapports', icon: <BarChartOutlined />, label: 'Rapports' },
+    { key: '/audit-logs', icon: <AuditOutlined />, label: 'Journal Audit' },
     { key: '/fidelisation', icon: <GiftOutlined />,          label: 'Fidélisation' },
     { key: '/livraisons',   icon: <CarOutlined />,           label: 'Livraisons' },
     { key: '/notifications', icon: <BellOutlined />, label: 'Notifications' },

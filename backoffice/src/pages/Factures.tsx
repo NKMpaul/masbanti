@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Table, Button, Modal, Form, Input, Select, Space, message, Tag } from 'antd'
-import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
+import { PlusOutlined, EyeOutlined,DownloadOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../services/api'
+
 
 interface Facture {
   id: string
@@ -97,23 +98,50 @@ export default function Factures() {
         <Tag color={statutColors[statut]}>{statut}</Tag>
       )
     },
+   
     {
-      title: 'Actions', key: 'actions',
-      render: (_: unknown, record: Facture) => (
-        <Space>
-          <Button
-            icon={<EyeOutlined />}
-            onClick={() => {
-              setSelectedFacture(record)
-              setIsPaiementModalOpen(true)
-            }}
-            disabled={record.statut === 'PAYEE' || record.statut === 'ANNULEE'}
-          >
-            Payer
-          </Button>
-        </Space>
-      )
-    }
+  title: 'Actions', key: 'actions',
+  render: (_: unknown, record: Facture) => (
+    <Space>
+      <Button
+        icon={<EyeOutlined />}
+        onClick={() => {
+          setSelectedFacture(record)
+          setIsPaiementModalOpen(true)
+        }}
+        disabled={record.statut === 'PAYEE' || record.statut === 'ANNULEE'}
+      >
+        Payer
+      </Button>
+      <Button
+        icon={<DownloadOutlined />}
+        onClick={async () => {
+          const token = localStorage.getItem('token')
+          const response = await fetch(
+            `http://localhost:8000/api/factures/${record.id}/pdf`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/pdf',
+              }
+            }
+          )
+          const blob = await response.blob()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `facture-${record.numero_facture}.pdf`
+          a.click()
+          URL.revokeObjectURL(url)
+        }}
+      >
+        PDF
+      </Button>
+    </Space>
+  )
+}
+
+
   ]
 
   return (

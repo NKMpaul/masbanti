@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\TypeServiceController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MissionLivraisonController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\AuditLogController;
+
 use Illuminate\Support\Facades\Route;
 
 // Routes publiques auth
@@ -89,4 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('notifications/{id}/lu', [NotificationController::class, 'marquerLu']);
     Route::patch('notifications/tout-lu', [NotificationController::class, 'marquerToutLu']);
     Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
+
+    // Dans le groupe auth:sanctum
+    Route::get('audit-logs', [AuditLogController::class, 'index']);
+    // Dans le groupe auth:sanctum
+    Route::get('factures/{id}/pdf', [FactureController::class, 'pdf']);
 });

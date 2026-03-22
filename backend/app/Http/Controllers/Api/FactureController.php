@@ -96,6 +96,15 @@ class FactureController extends Controller
         return response()->json($facture->load(['commande', 'client', 'agence', 'paiements']));
     }
 
+    public function pdf(string $id)
+{
+    $facture = Facture::with(['commande.articles.typeArticle', 'client.user', 'agence', 'paiements'])->findOrFail($id);
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('factures.pdf', compact('facture'));
+
+    return $pdf->download("facture-{$facture->numero_facture}.pdf");
+}
+
     public function destroy(string $id)
     {
         $facture = Facture::findOrFail($id);

@@ -15,6 +15,7 @@ import Livraisons from './pages/Livraisons'
 import Notifications from './pages/Notifications'
 import Catalogue from './pages/Catalogue'
 import Rapports from './pages/Rapports'
+import AuditLogs from './pages/AuditLogs'
 
 
 const queryClient = new QueryClient()
@@ -51,6 +52,7 @@ function App() {
               <Route path="fidelisation" element={<Fidelisation />} />
               <Route path="livraisons" element={<Livraisons />} />
               <Route path="rapports" element={<Rapports />} />
+              <Route path="audit-logs" element={<AuditLogs />} />
               <Route path="notifications" element={<Notifications />} />
               
             </Route>
