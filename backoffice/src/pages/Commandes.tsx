@@ -3,6 +3,7 @@ import { Table, Button, Modal, Form, Input, Select, Space, Tag, message } from '
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../services/api'
+import { useEffect } from 'react'
 
 interface Commande {
   id: string
@@ -38,6 +39,17 @@ export default function Commandes() {
   const [statutForm] = Form.useForm()
   const queryClient = useQueryClient()
 
+  useEffect(() => {
+    const channel = window.Echo.channel('commandes')
+    
+    channel.listen('.statut.change', () => {
+      queryClient.invalidateQueries({ queryKey: ['commandes'] })
+    })
+
+    return () => {
+      window.Echo.leaveChannel('commandes')
+    }
+  }, [queryClient])
   const { data, isLoading } = useQuery({
     queryKey: ['commandes'],
     queryFn: () => api.get('/commandes').then(res => res.data)
@@ -57,6 +69,7 @@ export default function Commandes() {
     queryKey: ['type-articles'],
     queryFn: () => api.get('/type-articles').then(res => res.data)
   })
+  
 
   const createMutation = useMutation({
     mutationFn: (values: Commande) => api.post('/commandes', values),
@@ -80,6 +93,7 @@ export default function Commandes() {
     onError: () => message.error('Erreur lors du changement de statut.')
   })
 
+  
   const columns = [
     { title: 'Numéro', dataIndex: 'numero_commande', key: 'numero_commande' },
     {

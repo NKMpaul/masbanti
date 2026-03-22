@@ -94,7 +94,7 @@ class CommandeController extends Controller
         return response()->json(['message' => 'Commande supprimée avec succès.']);
     }
 
-    public function changerStatut(Request $request, string $id)
+   public function changerStatut(Request $request, string $id)
     {
         $commande = Commande::with(['client.user'])->findOrFail($id);
 
@@ -104,24 +104,27 @@ class CommandeController extends Controller
 
         $commande->update(['statut' => $request->statut]);
 
-        // Envoyer notification automatique
+        // Notification automatique
         $notificationService = new \App\Services\NotificationService();
         $notificationService->notifierChangementStatut($request->statut, $commande);
+
+        // Broadcast WebSocket
+        broadcast(new \App\Events\CommandeStatutChange($commande))->toOthers();
 
         return response()->json($commande);
     }
 
 
     public function suivi(string $numero)
-{
-    $commande = Commande::with(['agence', 'articles.typeArticle'])
-        ->where('numero_commande', $numero)
-        ->first();
+    {
+        $commande = Commande::with(['agence', 'articles.typeArticle'])
+            ->where('numero_commande', $numero)
+            ->first();
 
-    if (!$commande) {
-        return response()->json(['message' => 'Commande introuvable.'], 404);
+        if (!$commande) {
+            return response()->json(['message' => 'Commande introuvable.'], 404);
+        }
+
+        return response()->json($commande);
     }
-
-    return response()->json($commande);
-}
 }
