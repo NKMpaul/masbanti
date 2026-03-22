@@ -14,6 +14,9 @@ import {
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { BellOutlined } from '@ant-design/icons'
+import { AppstoreOutlined } from '@ant-design/icons'
+import { BarChartOutlined } from '@ant-design/icons'
+
 const { Sider, Header, Content } = Layout
 
 export default function MainLayout() {
@@ -28,7 +31,9 @@ export default function MainLayout() {
     { key: '/clients',      icon: <UserOutlined />,          label: 'Clients' },
     { key: '/employes',     icon: <TeamOutlined />,          label: 'Employés' },
     { key: '/pointages',    icon: <ClockCircleOutlined />,   label: 'Pointages' },
+    { key: '/catalogue', icon: <AppstoreOutlined />, label: 'Catalogue' },
     { key: '/factures',     icon: <FileTextOutlined />,      label: 'Factures' },
+    { key: '/rapports', icon: <BarChartOutlined />, label: 'Rapports' },
     { key: '/fidelisation', icon: <GiftOutlined />,          label: 'Fidélisation' },
     { key: '/livraisons',   icon: <CarOutlined />,           label: 'Livraisons' },
     { key: '/notifications', icon: <BellOutlined />, label: 'Notifications' },

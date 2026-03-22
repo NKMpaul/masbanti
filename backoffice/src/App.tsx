@@ -13,6 +13,10 @@ import Fidelisation from './pages/Fidelisation'
 import Dashboard from './pages/Dashboard'
 import Livraisons from './pages/Livraisons'
 import Notifications from './pages/Notifications'
+import Catalogue from './pages/Catalogue'
+import Rapports from './pages/Rapports'
+
+
 const queryClient = new QueryClient()
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,9 +47,12 @@ function App() {
               <Route path="employes" element={<Employes />} />
               <Route path="pointages" element={<Pointages />} />
               <Route path="factures" element={<Factures />} />
+              <Route path="catalogue" element={<Catalogue />} />
               <Route path="fidelisation" element={<Fidelisation />} />
               <Route path="livraisons" element={<Livraisons />} />
+              <Route path="rapports" element={<Rapports />} />
               <Route path="notifications" element={<Notifications />} />
+              
             </Route>
           </Routes>
         </BrowserRouter>
