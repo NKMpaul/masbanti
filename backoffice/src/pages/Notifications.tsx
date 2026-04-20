@@ -1,6 +1,8 @@
 import { Table, Button, Badge, Space, Tag, message } from 'antd'
 import { CheckOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import dayjs from 'dayjs'
 import api from '../services/api'
 
 interface Notification {
@@ -15,15 +17,18 @@ interface Notification {
 
 export default function Notifications() {
   const queryClient = useQueryClient()
+  const [page, setPage] = useState(1) // État pour la pagination Laravel
 
+  // 1. Récupération des notifications paginées
   const { data, isLoading } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: () => api.get('/notifications').then(res => res.data)
+    queryKey: ['notifications', page],
+    queryFn: () => api.get(`/notifications?page=${page}`).then(res => res.data),
   })
 
+  // 2. Récupération du compteur (Badge)
   const { data: nonLues } = useQuery({
     queryKey: ['notifications-non-lues'],
-    queryFn: () => api.get('/notifications/non-lues').then(res => res.data)
+    queryFn: () => api.get('/notifications/non-lues').then(res => res.data),
   })
 
   const marquerLuMutation = useMutation({
@@ -47,13 +52,16 @@ export default function Notifications() {
     mutationFn: (id: string) => api.delete(`/notifications/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications-non-lues'] })
       message.success('Notification supprimée !')
     }
   })
 
   const columns = [
     {
-      title: 'Titre', dataIndex: 'titre', key: 'titre',
+      title: 'Titre', 
+      dataIndex: 'titre', 
+      key: 'titre',
       render: (titre: string, record: Notification) => (
         <span style={{ fontWeight: record.lu ? 'normal' : 'bold' }}>
           {!record.lu && <Badge status="processing" style={{ marginRight: 8 }} />}
@@ -63,11 +71,15 @@ export default function Notifications() {
     },
     { title: 'Message', dataIndex: 'message', key: 'message' },
     {
-      title: 'Type', dataIndex: 'type', key: 'type',
+      title: 'Type', 
+      dataIndex: 'type', 
+      key: 'type',
       render: (type: string) => <Tag color="blue">{type}</Tag>
     },
     {
-      title: 'Canal', dataIndex: 'canal', key: 'canal',
+      title: 'Canal', 
+      dataIndex: 'canal', 
+      key: 'canal',
       render: (canal: string) => (
         <Tag color={canal === 'EMAIL' ? 'green' : canal === 'PUSH' ? 'orange' : 'default'}>
           {canal}
@@ -75,17 +87,22 @@ export default function Notifications() {
       )
     },
     {
-      title: 'Statut', dataIndex: 'lu', key: 'lu',
+      title: 'Statut', 
+      dataIndex: 'lu', 
+      key: 'lu',
       render: (lu: boolean) => (
         <Tag color={lu ? 'default' : 'blue'}>{lu ? 'Lu' : 'Non lu'}</Tag>
       )
     },
     {
-      title: 'Date', dataIndex: 'created_at', key: 'created_at',
-      render: (date: string) => date?.slice(0, 16).replace('T', ' ')
+      title: 'Date', 
+      dataIndex: 'created_at', 
+      key: 'created_at',
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY HH:mm') // Date lisible à la française
     },
     {
-      title: 'Actions', key: 'actions',
+      title: 'Actions', 
+      key: 'actions',
       render: (_: unknown, record: Notification) => (
         <Space>
           {!record.lu && (
@@ -93,6 +110,7 @@ export default function Notifications() {
               size="small"
               icon={<CheckOutlined />}
               onClick={() => marquerLuMutation.mutate(record.id)}
+              loading={marquerLuMutation.isPending}
             >
               Lue
             </Button>
@@ -102,6 +120,7 @@ export default function Notifications() {
             danger
             icon={<DeleteOutlined />}
             onClick={() => deleteMutation.mutate(record.id)}
+            loading={deleteMutation.isPending}
           />
         </Space>
       )
@@ -119,7 +138,8 @@ export default function Notifications() {
         </h2>
         <Button
           onClick={() => marquerToutLuMutation.mutate()}
-          disabled={nonLues?.count === 0}
+          disabled={!nonLues || nonLues.count === 0}
+          loading={marquerToutLuMutation.isPending}
         >
           Tout marquer comme lu
         </Button>
@@ -127,10 +147,17 @@ export default function Notifications() {
 
       <Table
         columns={columns}
-        dataSource={data?.data}
+        dataSource={data?.data} // Les données réelles renvoyées par Laravel paginate()
         rowKey="id"
         loading={isLoading}
         rowClassName={(record: Notification) => record.lu ? '' : 'ant-table-row-selected'}
+        pagination={{
+          current: page,
+          pageSize: data?.per_page || 20,
+          total: data?.total || 0,
+          onChange: (newPage) => setPage(newPage), // Gère le clic sur les pages (1, 2, 3...)
+          showSizeChanger: false
+        }}
       />
     </div>
   )

@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MissionLivraisonController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\AuditLogController;
+use App\Http\Controllers\Api\PlanningController;
+use App\Http\Controllers\Api\CourseController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -92,8 +94,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('notifications/tout-lu', [NotificationController::class, 'marquerToutLu']);
     Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
 
-    // Dans le groupe auth:sanctum
     Route::get('audit-logs', [AuditLogController::class, 'index']);
-    // Dans le groupe auth:sanctum
+
     Route::get('factures/{id}/pdf', [FactureController::class, 'pdf']);
+
+    Route::apiResource('plannings', PlanningController::class);
+
+    Route::get('/employes', [EmployeController::class, 'index']);
+    Route::put('/courses/{id}/statut', [CourseController::class, 'changerStatut']);
 });

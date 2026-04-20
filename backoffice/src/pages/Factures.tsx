@@ -114,29 +114,65 @@ export default function Factures() {
         Payer
       </Button>
       <Button
-        icon={<DownloadOutlined />}
-        onClick={async () => {
-          const token = localStorage.getItem('token')
-          const response = await fetch(
-            `http://localhost:8000/api/factures/${record.id}/pdf`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: 'application/pdf',
-              }
-            }
-          )
-          const blob = await response.blob()
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `facture-${record.numero_facture}.pdf`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-      >
-        PDF
-      </Button>
+  icon={<DownloadOutlined />}
+  onClick={async () => {
+    try {
+      message.loading({ content: 'Génération du PDF...', key: 'telechargement_pdf' });
+      console.log("Étape 1 : Envoi de la requête à Laravel pour la facture ID :", record.id);
+
+      // 1. Appel via ton instance Axios unifiée
+      const response = await api.get(`/factures/${record.id}/pdf`, {
+        responseType: 'blob', // 👈 TRÈS IMPORTANT pour forcer Axios à lire un binaire
+        headers: {
+          Accept: 'application/pdf',
+        },
+      });
+
+      console.log("Étape 2 : Réponse reçue du serveur. Taille du fichier :", response.data.size);
+
+      // Vérification de sécurité : si le backend s'est trompé et a envoyé du JSON (erreur) au lieu d'un PDF
+      if (response.data.type === 'application/json') {
+        const text = await response.data.text();
+        const errorJson = JSON.parse(text);
+        console.error("Le serveur a renvoyé une erreur JSON au lieu d'un PDF :", errorJson);
+        message.error({ content: errorJson.message || 'Erreur serveur Laravel.', key: 'telechargement_pdf' });
+        return;
+      }
+
+      // 2. Création du Blob et du lien de téléchargement
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      
+      // On force l'affichage du bouton invisible dans le DOM pour que le clic fonctionne sur tous les navigateurs
+      a.style.display = 'none'; 
+      a.href = url;
+      a.download = `facture-${record.numero_facture}.pdf`;
+      
+      document.body.appendChild(a);
+      a.click(); // 👈 Le déclencheur du téléchargement
+
+      console.log("Étape 3 : Clic simulé avec succès pour le fichier :", a.download);
+
+      // 3. Nettoyage de la mémoire
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      message.success({ content: 'Téléchargement réussi !', key: 'telechargement_pdf' });
+   } catch (error: unknown) { // 👈 On utilise 'unknown' à la place de 'any'
+  console.error("Erreur attrapée pendant le processus :", error);
+
+  // On vérifie si l'objet possède bien la structure d'une erreur standard
+  if (error instanceof Error) {
+    console.error("Message d'erreur :", error.message);
+  }
+
+  message.error({ content: 'Erreur lors du téléchargement du PDF.', key: 'telechargement_pdf' });
+}
+  }}
+>
+  PDF
+</Button>
     </Space>
   )
 }

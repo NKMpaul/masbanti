@@ -97,11 +97,14 @@ export default function Fidelisation() {
     }
   ]
 
-  const totalClients = data?.data?.length ?? 0
-  const bronze = data?.data?.filter((c: Client) => c.niveau_fidelite === 'BRONZE').length ?? 0
-  const silver = data?.data?.filter((c: Client) => c.niveau_fidelite === 'SILVER').length ?? 0
-  const gold = data?.data?.filter((c: Client) => c.niveau_fidelite === 'GOLD').length ?? 0
-  const platinum = data?.data?.filter((c: Client) => c.niveau_fidelite === 'PLATINUM').length ?? 0
+  // Sécurité pour s'assurer qu'on boucle sur un tableau
+  const clientsArray = Array.isArray(data?.data) ? data.data : []
+
+  const totalClients = clientsArray.length
+  const bronze = clientsArray.filter((c: Client) => c.niveau_fidelite === 'BRONZE').length
+  const silver = clientsArray.filter((c: Client) => c.niveau_fidelite === 'SILVER').length
+  const gold = clientsArray.filter((c: Client) => c.niveau_fidelite === 'GOLD').length
+  const platinum = clientsArray.filter((c: Client) => c.niveau_fidelite === 'PLATINUM').length
 
   return (
     <div>
@@ -115,24 +118,37 @@ export default function Fidelisation() {
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Bronze" value={bronze} valueStyle={{ color: 'orange' }} />
+            {/* ✅ valueStyle remplacé par styles.content */}
+            <Statistic 
+              title="Bronze" 
+              value={bronze} 
+              styles={{ content: { color: 'orange' } }} 
+            />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Silver" value={silver} valueStyle={{ color: 'gray' }} />
+            <Statistic 
+              title="Silver" 
+              value={silver} 
+              styles={{ content: { color: 'gray' } }} 
+            />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Gold / Platinum" value={gold + platinum} valueStyle={{ color: 'gold' }} />
+            <Statistic 
+              title="Gold / Platinum" 
+              value={gold + platinum} 
+              styles={{ content: { color: 'gold' } }} 
+            />
           </Card>
         </Col>
       </Row>
 
       <Table
         columns={columns}
-        dataSource={data?.data}
+        dataSource={clientsArray}
         rowKey="id"
         loading={isLoading}
       />
@@ -143,6 +159,7 @@ export default function Fidelisation() {
         onCancel={() => setIsCrediterModalOpen(false)}
         onOk={() => crediterForm.submit()}
         confirmLoading={crediterMutation.isPending}
+        destroyOnHidden // ✅ Remplacé ici !
       >
         <Form form={crediterForm} layout="vertical" onFinish={(values) => crediterMutation.mutate(values)}>
           <Form.Item label="Points à créditer" name="points" rules={[{ required: true }]}>
@@ -160,6 +177,7 @@ export default function Fidelisation() {
         onCancel={() => setIsDebiterModalOpen(false)}
         onOk={() => debiterForm.submit()}
         confirmLoading={debiterMutation.isPending}
+        destroyOnHidden // ✅ Remplacé ici aussi !
       >
         <Form form={debiterForm} layout="vertical" onFinish={(values) => debiterMutation.mutate(values)}>
           <Form.Item label="Points à débiter" name="points" rules={[{ required: true }]}>

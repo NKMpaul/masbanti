@@ -1,22 +1,15 @@
-import { Layout, Menu, Avatar, Dropdown } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Badge } from 'antd'
 import {
-  DashboardOutlined,
-  ShopOutlined,
-  ShoppingCartOutlined,
-  UserOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-  GiftOutlined,
-  LogoutOutlined,
-  CarOutlined,
+  DashboardOutlined, ShopOutlined, ShoppingCartOutlined,
+  UserOutlined, TeamOutlined, FileTextOutlined,
+  ClockCircleOutlined, GiftOutlined, LogoutOutlined,
+  CarOutlined, BellOutlined, AppstoreOutlined,
+  BarChartOutlined, AuditOutlined,CalendarOutlined
 } from '@ant-design/icons'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { BellOutlined } from '@ant-design/icons'
-import { AppstoreOutlined } from '@ant-design/icons'
-import { BarChartOutlined } from '@ant-design/icons'
-import { AuditOutlined } from '@ant-design/icons'
+import { useQuery } from '@tanstack/react-query'
+import api from '../services/api'
 
 const { Sider, Header, Content } = Layout
 
@@ -25,20 +18,37 @@ export default function MainLayout() {
   const location = useLocation()
   const { user, logout } = useAuth()
 
+ // Utilisation de React Query avec ton instance 'api' configurée
+  const { data: nonLues } = useQuery({
+    queryKey: ['notifications-non-lues'],
+    queryFn: () => api.get('/notifications/non-lues').then(res => res.data),
+    refetchInterval: 30000, // Rafraîchissement toutes les 30 secondes
+  })
+
   const menuItems = [
-    { key: '/dashboard',    icon: <DashboardOutlined />,     label: 'Dashboard' },
-    { key: '/agences',      icon: <ShopOutlined />,          label: 'Agences' },
-    { key: '/commandes',    icon: <ShoppingCartOutlined />,  label: 'Commandes' },
-    { key: '/clients',      icon: <UserOutlined />,          label: 'Clients' },
-    { key: '/employes',     icon: <TeamOutlined />,          label: 'Employés' },
-    { key: '/pointages',    icon: <ClockCircleOutlined />,   label: 'Pointages' },
-    { key: '/catalogue', icon: <AppstoreOutlined />, label: 'Catalogue' },
-    { key: '/factures',     icon: <FileTextOutlined />,      label: 'Factures' },
-    { key: '/rapports', icon: <BarChartOutlined />, label: 'Rapports' },
-    { key: '/audit-logs', icon: <AuditOutlined />, label: 'Journal Audit' },
-    { key: '/fidelisation', icon: <GiftOutlined />,          label: 'Fidélisation' },
-    { key: '/livraisons',   icon: <CarOutlined />,           label: 'Livraisons' },
-    { key: '/notifications', icon: <BellOutlined />, label: 'Notifications' },
+    { key: '/dashboard',    icon: <DashboardOutlined />,    label: 'Dashboard' },
+    { key: '/agences',      icon: <ShopOutlined />,         label: 'Agences' },
+    { key: '/commandes',    icon: <ShoppingCartOutlined />, label: 'Commandes' },
+    { key: '/clients',      icon: <UserOutlined />,         label: 'Clients' },
+    { key: '/employes',     icon: <TeamOutlined />,         label: 'Employés' },
+    { key: '/pointages',    icon: <ClockCircleOutlined />,  label: 'Pointages' },
+    { key: '/catalogue',    icon: <AppstoreOutlined />,     label: 'Catalogue' },
+    { key: '/factures',     icon: <FileTextOutlined />,     label: 'Factures' },
+    { key: '/rapports',     icon: <BarChartOutlined />,     label: 'Rapports' },
+    { key: '/audit-logs',   icon: <AuditOutlined />,        label: 'Journal Audit' },
+    { key: '/plannings', icon: <CalendarOutlined />, label: 'Plannings RH' },
+    { key: '/fidelisation', icon: <GiftOutlined />,         label: 'Fidélisation' },
+    { key: '/livraisons',   icon: <CarOutlined />,          label: 'Livraisons' },
+    {
+      key: '/notifications',
+      // Le lien est fait ici : nonLues.count correspond au JSON de Laravel
+      icon: (
+        <Badge count={nonLues?.count ?? 0} size="small">
+          <BellOutlined />
+        </Badge>
+      ),
+      label: 'Notifications'
+    },
   ]
 
   const userMenu = {

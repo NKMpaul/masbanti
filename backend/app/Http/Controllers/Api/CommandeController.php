@@ -52,6 +52,12 @@ class CommandeController extends Controller
         ]);
 
         $commande = Commande::create($request->except('articles'));
+        $notificationService = new \App\Services\NotificationService();
+        $notificationService->notifierAdmins(
+            'Nouvelle commande reçue',
+            "La commande {$commande->numero_commande} vient d'être créée.",
+            'COMMANDE_CREEE'
+        );
 
         $montantTotal = 0;
         foreach ($request->articles as $article) {

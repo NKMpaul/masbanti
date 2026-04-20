@@ -10,26 +10,27 @@ class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AuditLog::with('user')
+        $query = AuditLog::with('user') // ⚠️ Assure-toi que la relation 'user' existe dans ton modèle AuditLog !
             ->orderBy('created_at', 'desc');
 
-        if ($request->has('action')) {
+        // 🔥 On utilise "filled" au lieu de "has" pour ignorer les chaînes de caractères vides ""
+        if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
-        if ($request->has('model')) {
+        if ($request->filled('model')) {
             $query->where('model', $request->model);
         }
 
-        if ($request->has('user_id')) {
+        if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
         }
 
-        if ($request->has('date_debut')) {
+        if ($request->filled('date_debut')) {
             $query->whereDate('created_at', '>=', $request->date_debut);
         }
 
-        if ($request->has('date_fin')) {
+        if ($request->filled('date_fin')) {
             $query->whereDate('created_at', '<=', $request->date_fin);
         }
 

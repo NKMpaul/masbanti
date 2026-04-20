@@ -16,7 +16,7 @@ import Notifications from './pages/Notifications'
 import Catalogue from './pages/Catalogue'
 import Rapports from './pages/Rapports'
 import AuditLogs from './pages/AuditLogs'
-
+import Plannings from './pages/Plannings';
 
 const queryClient = new QueryClient()
 
@@ -53,6 +53,7 @@ function App() {
               <Route path="livraisons" element={<Livraisons />} />
               <Route path="rapports" element={<Rapports />} />
               <Route path="audit-logs" element={<AuditLogs />} />
+              <Route path="/plannings" element={<Plannings />} />
               <Route path="notifications" element={<Notifications />} />
               
             </Route>

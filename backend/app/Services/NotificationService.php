@@ -86,4 +86,21 @@ class NotificationService
             ['commande_id' => $commande->id]
         );
     }
+
+
+    public function notifierAdmins(string $titre, string $message, string $type): void
+{
+    $admins = \App\Models\User::role(['SUPER_ADMIN', 'ADMIN_AGENCE'])->get();
+
+    foreach ($admins as $admin) {
+        \App\Models\Notification::create([
+            'user_id' => $admin->id,
+            'titre'   => $titre,
+            'message' => $message,
+            'type'    => $type,
+            'canal'   => 'INTERNE',
+            'lu'      => false,
+        ]);
+    }
+}
 }

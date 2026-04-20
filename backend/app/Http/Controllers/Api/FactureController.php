@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Facture;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class FactureController extends Controller
 {
@@ -95,14 +96,15 @@ class FactureController extends Controller
 
         return response()->json($facture->load(['commande', 'client', 'agence', 'paiements']));
     }
-
-    public function pdf(string $id)
+public function pdf(string $id)
 {
-    $facture = Facture::with(['commande.articles.typeArticle', 'client.user', 'agence', 'paiements'])->findOrFail($id);
+    // On récupère la facture avec ses relations (commande, client, articles)
+    $facture = Facture::with(['commande.articles', 'client', 'agence'])->findOrFail($id);
 
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('factures.pdf', compact('facture'));
+    // ✅ On cible 'factures.pdf' (le dossier views/factures/pdf.blade.php)
+    $pdf = Pdf::loadView('factures.pdf', compact('facture'));
 
-    return $pdf->download("facture-{$facture->numero_facture}.pdf");
+    return $pdf->download('Facture-' . $facture->numero_facture . '.pdf');
 }
 
     public function destroy(string $id)
