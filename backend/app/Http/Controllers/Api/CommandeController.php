@@ -59,6 +59,13 @@ class CommandeController extends Controller
             'COMMANDE_CREEE'
         );
 
+        $notificationService = new \App\Services\NotificationService();
+        $notificationService->notifierAdmins(
+            'Nouvelle commande reçue',
+            "La commande {$commande->numero_commande} vient d'être créée.",
+            'COMMANDE_CREEE'
+        );
+
         $montantTotal = 0;
         foreach ($request->articles as $article) {
             $commande->articles()->create($article);
@@ -118,6 +125,14 @@ class CommandeController extends Controller
         broadcast(new \App\Events\CommandeStatutChange($commande))->toOthers();
 
         return response()->json($commande);
+
+        if ($request->statut === 'PRETE') {
+        $notificationService->notifierAdmins(
+        'Commande prête',
+        "La commande {$commande->numero_commande} est prête à être retirée.",
+        'COMMANDE_PRETE'
+    );
+}
     }
 
 
