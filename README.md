@@ -98,5 +98,3 @@ npx expo start --web
 - ✅ Dashboard & Reporting
 - ✅ Tests Unitaires
 - ✅ CI/CD GitLab
-
-## Année universitaire 2025-2026
